@@ -30,7 +30,7 @@ export interface StoreService {
   // 事务
   insertTxn(record: TxnRecord): void;
   getTxn(id: string): TxnRecord | undefined;
-  listTxns(limit: number, filter?: { bot_id?: string; status?: string }): TxnRecord[];
+  listTxns(limit: number, filter?: { service_id?: string; bot_id?: string; status?: string }): TxnRecord[];
   hasDedupKey(key: string): boolean;
   // 插件安装登记（插件本体=代码包；安装=可挂载，卸载=级联摘除挂载）
   listInstalls(): { plugin_id: string; enabled: boolean; installed_at: string }[];
@@ -202,6 +202,7 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
     listTxns: (limit, filter) => {
       const where: string[] = [];
       const args: (string | number)[] = [];
+      if (filter?.service_id) { where.push('service_id = ?'); args.push(filter.service_id); }
       if (filter?.bot_id) { where.push('bot_id = ?'); args.push(filter.bot_id); }
       if (filter?.status) { where.push('status = ?'); args.push(filter.status); }
       const sql = 'SELECT payload FROM transactions' + (where.length ? ' WHERE ' + where.join(' AND ') : '') + ' ORDER BY received_at DESC LIMIT ?';

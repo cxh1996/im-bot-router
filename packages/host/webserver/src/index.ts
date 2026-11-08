@@ -2,7 +2,6 @@
 // 渠道处理器带整体超时保护（v0.2 D1：同步执行，防慢插件拖垮渠道超时窗口）
 // 能力协商（D6）：挂载时校验 所需 ⊆ 机器人能力，缺失即 400；机器人能力收窄时返回 warnings
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,8 +32,6 @@ declare module 'cordis' {
 interface Config {
   port?: number;
   staticIndex?: string;
-  /** 单管理员密码（D8）；未设 = 开放模式（仅限本机开发），设了 = /api/* 强制登录 */
-  adminPassword?: string;
 }
 
 const CHANNELS: ChannelId[] = ['feishu', 'wecom', 'dingtalk', 'slack', 'telegram'];
@@ -51,39 +48,6 @@ export function apply(ctx: Context, config: Config = {}) {
   const port = config.port ?? 9800;
   const staticIndex = config.staticIndex ?? fileURLToPath(new URL('../../../../apps/server/admin/index.html', import.meta.url));
   const channels = new Map<string, ChannelHandler>();
-
-  // ---- D8 单管理员鉴权（内存会话，重启失效；防爆破锁定）----
-  const adminPassword = config.adminPassword ?? process.env.ADMIN_PASSWORD ?? '';
-  const authEnabled = adminPassword.length > 0;
-  const SESSION_TTL = 7 * 24 * 3600 * 1000;
-  const sessions = new Map<string, number>(); // token -> expiresAt
-  const attempts = new Map<string, { n: number; lockedUntil: number }>();
-
-  const sha = (s: string) => createHash('sha256').update(s, 'utf8').digest();
-  const passwordOk = (pw: string) => timingSafeEqual(sha(pw), sha(adminPassword));
-
-  function clientIp(req: IncomingMessage): string {
-    return req.socket.remoteAddress ?? '?';
-  }
-
-  function isAuthed(req: IncomingMessage): boolean {
-    if (!authEnabled) return true;
-    const raw = req.headers.cookie ?? '';
-    const m = raw.match(/(?:^|;\s*)imbothub_session=([\w-]+)/);
-    if (!m) return false;
-    const exp = sessions.get(m[1]);
-    if (!exp || exp < Date.now()) {
-      sessions.delete(m[1]);
-      return false;
-    }
-    return true;
-  }
-
-  if (authEnabled) {
-    console.log('[webserver] 管理台鉴权已启用（单管理员，/api/* 需登录；/hooks/* 保持公开）');
-  } else {
-    console.log('[webserver] ⚠ 未配置 ADMIN_PASSWORD，管理 API 开放（本机开发模式；生产请设置）');
-  }
 
   ctx.provide('webserver', { addChannel: (c, h) => channels.set(c, h) } satisfies WebserverService);
 
@@ -133,39 +97,6 @@ export function apply(ctx: Context, config: Config = {}) {
           return respond((async () => {
             const path = api[1] ?? '/';
 
-            // ---- 鉴权（D8）：login 公开，其余 /api/* 需会话 ----
-            if (path === '/login' && method === 'POST') {
-              const b = body() as { password?: string };
-              const ip = clientIp(req);
-              const at = attempts.get(ip);
-              if (at && at.lockedUntil > Date.now()) {
-                return sendJson(res, 429, { code: 429, msg: `尝试过多，${Math.ceil((at.lockedUntil - Date.now()) / 1000)}s 后再试` });
-              }
-              if (!b?.password || !passwordOk(b.password)) {
-                const n = (at?.n ?? 0) + 1;
-                attempts.set(ip, n >= 5 ? { n: 0, lockedUntil: Date.now() + 60_000 } : { n, lockedUntil: 0 });
-                return sendJson(res, 401, { code: 401, msg: '密码错误' + (n >= 5 ? '（已锁定 60s）' : n < 5 ? `（剩 ${5 - n} 次机会）` : '') });
-              }
-              attempts.delete(ip);
-              const token = randomBytes(32).toString('hex');
-              sessions.set(token, Date.now() + SESSION_TTL);
-              res.writeHead(200, {
-                'content-type': 'application/json; charset=utf-8',
-                'set-cookie': `imbothub_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL / 1000}`,
-              });
-              return void res.end(JSON.stringify({ ok: true }));
-            }
-            if (path === '/logout' && method === 'POST') {
-              const m = (req.headers.cookie ?? '').match(/(?:^|;\s*)imbothub_session=([\w-]+)/);
-              if (m) sessions.delete(m[1]);
-              res.writeHead(200, {
-                'content-type': 'application/json; charset=utf-8',
-                'set-cookie': 'imbothub_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0',
-              });
-              return void res.end(JSON.stringify({ ok: true }));
-            }
-            if (!isAuthed(req)) return sendJson(res, 401, { code: 'unauthorized', msg: '未登录' });
-
             // 总览（管理页一枪拉全）
             if (path === '/overview' && method === 'GET') {
               return sendJson(res, 200, {
@@ -178,9 +109,12 @@ export function apply(ctx: Context, config: Config = {}) {
             }
             if (path === '/transactions' && method === 'GET') {
               const limit = Math.min(Number(url.searchParams.get('limit') ?? 50), 200);
+              const serviceId = url.searchParams.get('service_id') ?? undefined;
               const botId = url.searchParams.get('bot_id') ?? undefined;
               const status = url.searchParams.get('status') ?? undefined;
-              const filter = botId || status ? { bot_id: botId || undefined, status: status || undefined } : undefined;
+              const filter = serviceId || botId || status
+                ? { service_id: serviceId || undefined, bot_id: botId || undefined, status: status || undefined }
+                : undefined;
               return sendJson(res, 200, store.listTxns(limit, filter).map(txnSummary));
             }
             const txnId = path.match(/^\/transactions\/([\w-]+)$/);
@@ -237,6 +171,7 @@ export function apply(ctx: Context, config: Config = {}) {
                 today_total: today.length,
                 today_success: today.filter((t) => t.status === 'success').length,
                 today_failed: today.filter((t) => t.status === 'failed').length,
+                today_partial: today.filter((t) => t.status === 'partial').length,
                 avg_ms: avg, p95_ms: p95,
                 recent7d: all.filter((t) => Date.now() - new Date(t.received_at).getTime() < 7 * 86400_000).length,
                 last_active_at: all[0]?.received_at ?? null,

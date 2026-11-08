@@ -68,7 +68,9 @@ test('事务：插入/查询/幂等键', () => {
   assert.equal(store.getTxn('txn_t1')?.status, 'success');
   assert.equal(store.hasDedupKey('feishu:evt1'), true);
   assert.equal(store.hasDedupKey('feishu:evt2'), false);
-  store.insertTxn(txn({ txn_id: 'txn_t2', dedup_key: 'feishu:evt2', status: 'dedup' }));
+  store.insertTxn(txn({ txn_id: 'txn_t2', dedup_key: 'feishu:evt2', status: 'dedup', service_id: 's2', bot_id: 'b2' }));
   const list = store.listTxns(10);
   assert.equal(list.length, 2);
+  assert.equal(store.listTxns(10, { service_id: 's1' }).length, 1);
+  assert.equal(store.listTxns(10, { bot_id: 'b2', status: 'dedup' })[0]?.txn_id, 'txn_t2');
 });

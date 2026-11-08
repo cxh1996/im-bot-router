@@ -4,13 +4,17 @@ import { Context } from 'cordis';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, existsSync } from 'node:fs';
 
-// .env（仓库根）→ process.env：已存在的环境变量优先，不覆盖
-try {
-  for (const line of readFileSync(new URL('../../../.env', import.meta.url), 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].trim();
-  }
-} catch { /* .env 可选 */ }
+// .env → process.env：已存在的环境变量优先，不覆盖。探针目录里的飞书凭证也认。
+function loadEnvFile(url: URL): void {
+  try {
+    for (const line of readFileSync(url, 'utf8').split(/\r?\n/)) {
+      const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+      if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].trim();
+    }
+  } catch { /* 文件可选 */ }
+}
+loadEnvFile(new URL('../../../.env', import.meta.url));
+loadEnvFile(new URL('../../../probe/feishu-ws/.env', import.meta.url));
 import * as webserver from '@im-bot-hub/host-webserver';
 import * as storeSqlite from '@im-bot-hub/store-sqlite';
 import * as dispatcher from '@im-bot-hub/engine-dispatcher';

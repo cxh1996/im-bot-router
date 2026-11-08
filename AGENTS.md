@@ -8,7 +8,7 @@
 - `pnpm dev` — 启动平台（端口 9800；probe 旧链路在 9900，两者并存）
 - `pnpm typecheck` — 类型检查（pre-commit 钩子强制）
 - `pnpm test` — node:test 单测（pre-push 钩子强制）
-- 管理台 http://127.0.0.1:9800/（密码=.env 的 ADMIN_PASSWORD）；写业务插件先读 .agents/skills/bot-plugin-dev
+- 管理台 http://127.0.0.1:9800/（无登录）；写业务插件先读 .agents/skills/bot-plugin-dev
 
 ## 核心原则（需求方 2026-11-07 定）
 

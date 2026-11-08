@@ -45,6 +45,6 @@ export function apply(ctx: Context) {
 
 1. `apps/server/src/main.ts` 加 `import * as x from '@im-bot-hub/plugin-<name>'` + `await ctx.plugin(x)`；apps/server/package.json 加 workspace 依赖
 2. `pnpm typecheck && pnpm test`，重启 `pnpm dev`
-3. 管理台（127.0.0.1:9800，密码=.env ADMIN_PASSWORD）→ 机器人 → 挂载插件 → ⚙ 填配置 → ↑↓ 排序
+3. 管理台（127.0.0.1:9800，直接打开）→ 机器人 → 挂载插件 → 配置 → 拖拽排序
 4. 实测：lark-cli 以用户身份发带 @ 的群消息（模板见项目 memory/回放脚本），看管理台事务 steps 与群里回帖
 5. 语义识别 v1 是规则式（关键词/正则/URL 提取），别上来就接 LLM 意图分类——先跑通再升级

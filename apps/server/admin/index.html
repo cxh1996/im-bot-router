@@ -41,7 +41,6 @@
   <b>im-bot-hub</b><span class="tag">M1</span>
   <span class="muted" style="color:#bbb">回调服务 / 机器人 / 插件 / 事务</span>
   <span style="flex:1"></span>
-  <button id="logout" onclick="logout()">退出</button>
   <button class="primary" id="refresh">刷新</button>
 </header>
 <main>
@@ -80,14 +79,6 @@
   </div>
 </main>
 <div id="toast"></div>
-<div id="login" style="display:none;position:fixed;inset:0;background:rgba(31,35,41,.55);z-index:50;align-items:center;justify-content:center;">
-  <div class="card" style="width:340px;text-align:center">
-    <h2>im-bot-hub 管理台登录</h2>
-    <input id="pw" type="password" placeholder="管理员密码（.env 的 ADMIN_PASSWORD）" style="width:100%" onkeydown="if(event.key==='Enter')login()">
-    <div style="margin-top:10px"><button class="primary" style="padding:5px 22px" onclick="login()">登录</button></div>
-    <div id="login-err" style="color:#d83931;margin-top:8px;font-size:12px"></div>
-  </div>
-</div>
 <script>
 const $ = (s) => document.querySelector(s);
 let OV = { services: [], bots: [], mounts: [], plugins: [], capabilityCatalog: [] };
@@ -106,17 +97,8 @@ async function api(method, path, body) {
   return j;
 }
 async function jfetch(url, opts) {
-  const r = await fetch(url, opts);
-  if (r.status === 401) { showLogin(); throw new Error('unauthorized'); }
-  return r;
+  return fetch(url, opts);
 }
-function showLogin() { $('#login').style.display = 'flex'; }
-async function login() {
-  const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: $('#pw').value }) });
-  if (r.ok) { $('#login').style.display = 'none'; $('#login-err').textContent = ''; $('#pw').value = ''; loadAll(); }
-  else { const j = await r.json().catch(() => ({})); $('#login-err').textContent = j.msg || '登录失败'; }
-}
-async function logout() { await fetch('/api/logout', { method: 'POST' }); showLogin(); }
 
 // ---------- 渲染 ----------
 async function loadAll() { await loadOverview(); await loadTxns(); }

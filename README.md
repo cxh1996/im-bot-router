@@ -25,7 +25,7 @@ IM 平台 ──POST /hooks/{channel}/{service_id}──> 渠道适配器（验�
 | `packages/channels/feishu` | challenge/AES/事件归一化/回复翻译 |
 | `packages/host/webserver` | hooks 路由 + 管理 API（单管理员鉴权）+ 静态托管 |
 | `packages/plugins/*` | 业务插件：echo、help、code-review（触发 Claude Code Workflow，支持模型降级链） |
-| `packages/client/web` | 管理台（左侧导航：机器人管理/插件管理） |
+| `packages/client/web` | 管理台（左侧导航：回调服务 / 机器人 / 插件 / 事务） |
 | `apps/server` | 薄宿主，插件装配 |
 
 ## 快速开始
@@ -36,7 +36,7 @@ pnpm build:web          # 构建管理台
 pnpm dev                # 启动，管理台 http://127.0.0.1:9800/
 ```
 
-`.env`（不入库）：`FEISHU_APP_ID` / `FEISHU_APP_SECRET` / `ADMIN_PASSWORD`（不设则管理 API 开放，仅限本机）。
+`.env`（不入库）：`FEISHU_APP_ID` / `FEISHU_APP_SECRET`。管理台不设登录，打开即可访问。
 
 ## 开发
 
