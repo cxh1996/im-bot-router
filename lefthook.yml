@@ -1,0 +1,9 @@
+# 本地门禁保持窄而快（dsh 范式：全量矩阵归 CI，本仓库暂无 CI）
+pre-commit:
+  commands:
+    typecheck:
+      run: pnpm typecheck
+pre-push:
+  commands:
+    tests:
+      run: pnpm test

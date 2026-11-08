@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>im-bot-hub · 管理台</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; margin: 0; background: #f5f6f8; color: #1f2329; font-size: 14px; }
+  header { background: #1f2329; color: #fff; padding: 12px 24px; display: flex; gap: 14px; align-items: center; position: sticky; top: 0; z-index: 9; }
+  header .tag { font-size: 12px; background: #3370ff; border-radius: 4px; padding: 2px 8px; }
+  main { display: grid; grid-template-columns: 460px 1fr; gap: 16px; padding: 16px 24px; }
+  .card { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 16px; }
+  h2 { font-size: 14px; margin: 0 0 10px; color: #646a73; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #f0f1f3; vertical-align: top; }
+  th { color: #646a73; font-weight: 500; white-space: nowrap; }
+  tr.click { cursor: pointer; } tr.click:hover { background: #f5f8ff; }
+  .pill { display: inline-block; border-radius: 10px; padding: 1px 8px; font-size: 12px; }
+  .success { background: #e8f3e8; color: #2ea33d; } .partial { background: #fff3e0; color: #d9822b; }
+  .failed { background: #fde8e8; color: #d83931; } .dedup { background: #eceefe; color: #4a67d4; }
+  .warn { background: #fff3e0; color: #d9822b; border-radius: 6px; padding: 4px 8px; font-size: 12px; margin: 4px 0; }
+  pre { background: #f5f6f8; border-radius: 8px; padding: 10px; font-size: 12px; overflow: auto; max-height: 300px; }
+  .muted { color: #8f959e; font-size: 12px; }
+  .kv { font-size: 13px; line-height: 1.9; }
+  button { border: 1px solid #dee0e3; background: #fff; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 12px; }
+  button:hover { border-color: #3370ff; color: #3370ff; }
+  button.primary { background: #3370ff; color: #fff; border-color: #3370ff; }
+  button.danger:hover { border-color: #d83931; color: #d83931; }
+  button.mini { padding: 1px 6px; font-size: 12px; }
+  input, select { border: 1px solid #dee0e3; border-radius: 6px; padding: 4px 8px; font-size: 13px; margin: 2px 4px 2px 0; }
+  .svc { border: 1px solid #f0f1f3; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+  .bot { border-left: 3px solid #3370ff; background: #fafbfc; border-radius: 6px; padding: 8px 10px; margin: 8px 0 8px 10px; }
+  .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2329; color: #fff; border-radius: 8px; padding: 8px 16px; font-size: 13px; display: none; z-index: 99; }
+  details { margin: 4px 0; } summary { cursor: pointer; color: #3370ff; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <b>im-bot-hub</b><span class="tag">M1</span>
+  <span class="muted" style="color:#bbb">回调服务 / 机器人 / 插件 / 事务</span>
+  <span style="flex:1"></span>
+  <button id="logout" onclick="logout()">退出</button>
+  <button class="primary" id="refresh">刷新</button>
+</header>
+<main>
+  <div>
+    <div class="card">
+      <h2>新建回调服务</h2>
+      <div class="row">
+        <input id="svc-id" placeholder="服务ID 如 svc_test" style="width:110px" />
+        <select id="svc-channel"><option>feishu</option><option>wecom</option><option>dingtalk</option><option>slack</option><option>telegram</option></select>
+        <input id="svc-name" placeholder="名称" style="width:120px" />
+      </div>
+      <div class="row">
+        <input id="svc-appid" placeholder="appId" style="width:130px" />
+        <input id="svc-appsecret" placeholder="appSecret" type="password" style="width:130px" />
+        <button class="primary" onclick="createService()">创建</button>
+      </div>
+      <div class="muted">创建后把回调地址配到 IM 平台侧；secret 只存不显。</div>
+    </div>
+    <div class="card">
+      <h2>回调服务 / 机器人</h2>
+      <div id="overview">加载中…</div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2>事务记录</h2>
+      <table id="txn-table">
+        <thead><tr><th>时间</th><th>状态</th><th>会话</th><th>机器人</th><th>文本</th><th>插件链</th></tr></thead>
+        <tbody><tr><td colspan="6" class="muted">加载中…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>事务详情</h2>
+      <div id="detail" class="muted">点击事务行查看</div>
+    </div>
+  </div>
+</main>
+<div id="toast"></div>
+<div id="login" style="display:none;position:fixed;inset:0;background:rgba(31,35,41,.55);z-index:50;align-items:center;justify-content:center;">
+  <div class="card" style="width:340px;text-align:center">
+    <h2>im-bot-hub 管理台登录</h2>
+    <input id="pw" type="password" placeholder="管理员密码（.env 的 ADMIN_PASSWORD）" style="width:100%" onkeydown="if(event.key==='Enter')login()">
+    <div style="margin-top:10px"><button class="primary" style="padding:5px 22px" onclick="login()">登录</button></div>
+    <div id="login-err" style="color:#d83931;margin-top:8px;font-size:12px"></div>
+  </div>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+let OV = { services: [], bots: [], mounts: [], plugins: [], capabilityCatalog: [] };
+const fmt = (t) => t ? new Date(t).toLocaleTimeString('zh-CN') : '';
+const pill = (s) => `<span class="pill ${s}">${s}</span>`;
+const esc = (s) => { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; };
+
+function toast(msg, ok = true) {
+  const t = $('#toast'); t.textContent = msg; t.style.background = ok ? '#2ea33d' : '#d83931'; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2600);
+}
+async function api(method, path, body) {
+  const r = await jfetch('/api' + path, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { toast(`${method} ${path} → ${j.msg || r.status}`, false); throw new Error(j.msg || r.status); }
+  return j;
+}
+async function jfetch(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) { showLogin(); throw new Error('unauthorized'); }
+  return r;
+}
+function showLogin() { $('#login').style.display = 'flex'; }
+async function login() {
+  const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: $('#pw').value }) });
+  if (r.ok) { $('#login').style.display = 'none'; $('#login-err').textContent = ''; $('#pw').value = ''; loadAll(); }
+  else { const j = await r.json().catch(() => ({})); $('#login-err').textContent = j.msg || '登录失败'; }
+}
+async function logout() { await fetch('/api/logout', { method: 'POST' }); showLogin(); }
+
+// ---------- 渲染 ----------
+async function loadAll() { await loadOverview(); await loadTxns(); }
+
+async function loadOverview() {
+  OV = await (await jfetch('/api/overview')).json();
+  const root = $('#overview');
+  if (!OV.services.length) { root.innerHTML = '<span class="muted">暂无服务——用上方表单创建</span>'; return; }
+  root.innerHTML = OV.services.map(s => {
+    const bots = OV.bots.filter(b => b.service_id === s.id);
+    return `<div class="svc">
+      <div class="row">
+        <b>${esc(s.id)}</b><span class="muted">${s.channel}</span><span>${esc(s.name)}</span>
+        ${s.enabled ? '' : '<span class="pill failed">已停用</span>'}
+        <span style="flex:1"></span>
+        <span class="muted" title="点击复制" style="cursor:pointer" onclick="copyCb('${esc(s.callbackUrl)}')">${esc(s.callbackUrl)} 📋</span>
+        <button onclick="toggleService('${esc(s.id)}', ${!s.enabled})">${s.enabled ? '停用' : '启用'}</button>
+        <button class="danger" onclick="delService('${esc(s.id)}')">删除</button>
+      </div>
+      <div class="muted">凭证 appId: ${esc(s.credentials.appId || '—')} appSecret: ${s.credentials.appSecret ? '已存' : '—'}</div>
+      ${bots.map(b => botHtml(b)).join('') || '<div class="muted" style="margin-left:10px">└ 无机器人</div>'}
+      <div style="margin-left:10px;margin-top:6px"><button onclick="showNewBot('${esc(s.id)}')">＋ 新建机器人</button>
+        <span id="newbot-${esc(s.id)}"></span></div>
+    </div>`;
+  }).join('');
+}
+
+function botHtml(b) {
+  const mounts = OV.mounts.filter(m => m.bot_id === b.id).sort((x, y) => x.order - y.order);
+  const mountedIds = mounts.map(m => m.plugin_id);
+  const available = OV.plugins.filter(p => !mountedIds.includes(p.id));
+  const insufficiency = mounts.map(m => {
+    const def = OV.plugins.find(p => p.id === m.plugin_id);
+    if (!def) return null;
+    const missing = def.requiredCapabilities.filter(c => !b.capabilities.includes(c));
+    return missing.length ? `<div class="warn">⚠ 插件 ${esc(m.plugin_id)} 缺能力：${esc(missing.join(', '))}（执行时将跳过）</div>` : null;
+  }).filter(Boolean).join('');
+  return `<div class="bot">
+    <div class="row">
+      <b>${esc(b.id)}</b><span>${esc(b.name)}</span>
+      ${b.enabled ? '' : '<span class="pill failed">已停用</span>'}
+      <span style="flex:1"></span>
+      <button onclick="toggleBot('${esc(b.id)}', ${!b.enabled})">${b.enabled ? '停用' : '启用'}</button>
+      <button class="danger" onclick="delBot('${esc(b.id)}')">删除</button>
+    </div>
+    <div class="row" style="margin:4px 0">能力：
+      ${OV.capabilityCatalog.map(c => `<label><input type="checkbox" ${b.capabilities.includes(c.id) ? 'checked' : ''} onchange="toggleCap('${esc(b.id)}','${esc(c.id)}',this.checked)"> ${esc(c.label)}</label>`).join('')}
+    </div>
+    ${insufficiency}
+    <div style="margin:4px 0">插件链（自上而下执行）：
+      ${mounts.length ? '' : '<span class="muted">空</span>'}
+      ${mounts.map((m, i) => `<span class="row" style="display:inline-flex;border:1px solid #f0f1f3;border-radius:6px;padding:2px 8px;margin:2px">
+        ${i + 1}. ${esc(m.plugin_id)}
+        <button class="mini" ${i === 0 ? 'disabled' : ''} onclick="moveMount('${esc(b.id)}',${i},-1)">↑</button>
+        <button class="mini" ${i === mounts.length - 1 ? 'disabled' : ''} onclick="moveMount('${esc(b.id)}',${i},1)">↓</button>
+        <button class="mini" onclick="editMountConfig('${esc(b.id)}','${esc(m.plugin_id)}')">⚙</button>
+        <button class="mini danger" onclick="unmount('${esc(b.id)}','${esc(m.plugin_id)}')">卸</button>
+      </span>`).join('')}
+    </div>
+    <div class="row">
+      <select id="plug-${esc(b.id)}"><option value="">选择插件…</option>${available.map(p => `<option value="${esc(p.id)}">${esc(p.id)}（需 ${esc(p.requiredCapabilities.join(',')) || '无'}）</option>`).join('')}</select>
+      <button onclick="mount('${esc(b.id)}')">挂载</button>
+    </div>
+  </div>`;
+}
+
+async function loadTxns() {
+  const rows = await (await jfetch('/api/transactions?limit=50')).json();
+  const tb = $('#txn-table tbody');
+  tb.innerHTML = rows.length ? '' : '<tr><td colspan="6" class="muted">暂无事务</td></tr>';
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    tr.className = 'click';
+    tr.innerHTML = `<td class="muted">${fmt(r.received_at)}</td><td>${pill(r.status)}</td>
+      <td>${r.chat_type === 'p2p' ? '私聊' : '群聊'}</td><td class="muted">${esc(r.bot_id || '')}</td>
+      <td>${esc(r.text || '')}</td><td class="muted">${esc(r.steps || '')}</td>`;
+    tr.onclick = () => showDetail(r.txn_id);
+    tb.appendChild(tr);
+  }
+}
+
+async function showDetail(id) {
+  const t = await (await jfetch('/api/transactions/' + id)).json();
+  $('#detail').innerHTML = `
+    <div class="kv"><b>${t.txn_id}</b> ${pill(t.status)} · ${t.channel}/${t.service_id}/${t.bot_id} · transport=${t.transport}
+    · ${fmt(t.received_at)} → ${fmt(t.finished_at)}</div>
+    <h2 style="margin-top:12px">插件步骤</h2>
+    <table><thead><tr><th>#</th><th>插件</th><th>结果</th><th>耗时</th><th>错误</th></tr></thead><tbody>
+    ${t.steps.map(s => `<tr><td>${s.order}</td><td>${esc(s.plugin)}</td><td>${pill(s.result)}</td><td>${s.duration_ms}ms</td><td class="muted">${esc(s.error || '')}</td></tr>`).join('')}
+    </tbody></table>
+    <h2 style="margin-top:12px">回复</h2>
+    <div class="kv">${t.replies.map(r => `${esc(r.api)} → ${r.code} ${esc(r.msg)}`).join('<br/>') || '<span class="muted">无</span>'}</div>
+    <h2 style="margin-top:12px">统一事件</h2><pre>${esc(JSON.stringify(t.unified, null, 2))}</pre>
+    <h2>原始事件</h2><pre>${esc(JSON.stringify(t.raw, null, 2))}</pre>`;
+}
+
+// ---------- 操作 ----------
+async function createService() {
+  await api('POST', '/services', {
+    id: $('#svc-id').value.trim(), channel: $('#svc-channel').value, name: $('#svc-name').value.trim(),
+    credentials: { appId: $('#svc-appid').value.trim(), appSecret: $('#svc-appsecret').value.trim() },
+  });
+  toast('服务已创建'); ['svc-id', 'svc-name', 'svc-appid', 'svc-appsecret'].forEach(i => $('#' + i).value = '');
+  loadOverview();
+}
+function copyCb(url) { navigator.clipboard.writeText(location.origin + url).then(() => toast('回调地址已复制')); }
+async function toggleService(id, enabled) { await api('PATCH', '/services/' + id, { enabled }); loadOverview(); }
+async function delService(id) { if (!confirm(`删除服务 ${id} 及其全部机器人/挂载？`)) return; await api('DELETE', '/services/' + id); toast('已删除'); loadOverview(); }
+
+function showNewBot(svcId) {
+  const box = $('#newbot-' + svcId);
+  box.innerHTML = `<input id="nb-name-${svcId}" placeholder="机器人名称" style="width:100px">
+    <button class="primary" onclick="createBot('${svcId}')">建</button>`;
+  $('#nb-name-' + svcId).focus();
+}
+async function createBot(svcId) {
+  const name = $('#nb-name-' + svcId).value.trim();
+  await api('POST', '/bots', { service_id: svcId, name, capabilities: ['im:message.read', 'im:message.reply'] });
+  toast('机器人已创建（默认勾选全部能力）'); loadOverview();
+}
+async function toggleBot(id, enabled) { await api('PATCH', '/bots/' + id, { enabled }); loadOverview(); }
+async function delBot(id) { if (!confirm(`删除机器人 ${id} 及其挂载？`)) return; await api('DELETE', '/bots/' + id); toast('已删除'); loadOverview(); }
+async function toggleCap(botId, cap, on) {
+  const b = OV.bots.find(x => x.id === botId);
+  const caps = on ? [...b.capabilities, cap] : b.capabilities.filter(c => c !== cap);
+  const r = await api('PATCH', '/bots/' + botId, { capabilities: caps });
+  if (r.warnings && r.warnings.length) toast(r.warnings.map(w => `⚠ ${w.plugin} 缺 ${w.missing.join(',')}`).join('；'), false);
+  loadOverview();
+}
+async function mount(botId) {
+  const pid = $('#plug-' + botId).value;
+  if (!pid) return;
+  try { await api('POST', `/bots/${botId}/mounts`, { plugin_id: pid }); toast('已挂载'); loadOverview(); }
+  catch (e) { loadOverview(); }
+}
+async function unmount(botId, pid) { await api('DELETE', `/bots/${botId}/mounts/${pid}`); toast('已卸载'); loadOverview(); }
+async function editMountConfig(botId, pid) {
+  const m = OV.mounts.find(x => x.bot_id === botId && x.plugin_id === pid);
+  const input = prompt(`插件 ${pid} 的挂载配置（JSON）:`, JSON.stringify(m.config ?? {}, null, 2));
+  if (input === null) return;
+  let cfg; try { cfg = JSON.parse(input); } catch { return toast('JSON 不合法', false); }
+  await api('PATCH', `/bots/${botId}/mounts/${pid}`, { config: cfg });
+  toast('配置已保存'); loadOverview();
+}
+async function moveMount(botId, idx, dir) {
+  const ids = OV.mounts.filter(m => m.bot_id === botId).sort((a, b) => a.order - b.order).map(m => m.plugin_id);
+  const j = idx + dir;
+  [ids[idx], ids[j]] = [ids[j], ids[idx]];
+  await api('PUT', `/bots/${botId}/mounts/order`, { plugin_ids: ids });
+  loadOverview();
+}
+
+$('#refresh').onclick = loadAll;
+loadAll(); setInterval(loadTxns, 8000);
+</script>
+</body>
+</html>

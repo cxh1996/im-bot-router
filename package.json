@@ -1,0 +1,18 @@
+{
+  "name": "im-bot-hub",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "tsx apps/server/src/main.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsx --test packages/**/test/*.test.ts",
+    "build:web": "pnpm --filter @im-bot-hub/client-web build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "lefthook": "^1.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

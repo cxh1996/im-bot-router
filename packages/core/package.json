@@ -1,0 +1,5 @@
+{
+  "name": "@im-bot-hub/core",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" }
+}

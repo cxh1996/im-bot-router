@@ -1,0 +1,16 @@
+{
+  "name": "@im-bot-hub/server",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@im-bot-hub/channel-feishu": "workspace:*",
+    "@im-bot-hub/core": "workspace:*",
+    "@im-bot-hub/engine-dispatcher": "workspace:*",
+    "@im-bot-hub/host-webserver": "workspace:*",
+    "@im-bot-hub/plugin-echo": "workspace:*",
+    "@im-bot-hub/plugin-help": "workspace:*",
+    "@im-bot-hub/plugin-code-review": "workspace:*",
+    "@im-bot-hub/store-sqlite": "workspace:*",
+    "cordis": "4.0.0-rc.12"
+  }
+}

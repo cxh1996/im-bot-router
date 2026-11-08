@@ -1,0 +1,9 @@
+{
+  "name": "@im-bot-hub/host-webserver",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@im-bot-hub/core": "workspace:*",
+    "cordis": "4.0.0-rc.12"
+  }
+}
