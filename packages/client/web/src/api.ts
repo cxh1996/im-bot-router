@@ -1,6 +1,7 @@
 // 统一 API 门面
 export interface ServiceView {
   id: string; channel: string; name: string; enabled: boolean;
+  callback_path: string;
   credentials: { appId: string; appSecret: string; encryptKey: string };
   callbackUrl: string;
 }

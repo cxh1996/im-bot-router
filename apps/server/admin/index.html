@@ -53,11 +53,14 @@
         <input id="svc-name" placeholder="名称" style="width:120px" />
       </div>
       <div class="row">
+        <input id="svc-path" placeholder="回调路径 如 /message/event" style="width:220px" value="/message/event" />
+      </div>
+      <div class="row">
         <input id="svc-appid" placeholder="appId" style="width:130px" />
         <input id="svc-appsecret" placeholder="appSecret" type="password" style="width:130px" />
         <button class="primary" onclick="createService()">创建</button>
       </div>
-      <div class="muted">创建后把回调地址配到 IM 平台侧；secret 只存不显。</div>
+      <div class="muted">回调路径自行填写；创建后把完整地址配到 IM 平台侧；secret 只存不显。</div>
     </div>
     <div class="card">
       <h2>回调服务 / 机器人</h2>
@@ -199,9 +202,11 @@ async function showDetail(id) {
 async function createService() {
   await api('POST', '/services', {
     id: $('#svc-id').value.trim(), channel: $('#svc-channel').value, name: $('#svc-name').value.trim(),
+    callback_path: $('#svc-path').value.trim(),
     credentials: { appId: $('#svc-appid').value.trim(), appSecret: $('#svc-appsecret').value.trim() },
   });
   toast('服务已创建'); ['svc-id', 'svc-name', 'svc-appid', 'svc-appsecret'].forEach(i => $('#' + i).value = '');
+  $('#svc-path').value = '/message/event';
   loadOverview();
 }
 function copyCb(url) { navigator.clipboard.writeText(location.origin + url).then(() => toast('回调地址已复制')); }

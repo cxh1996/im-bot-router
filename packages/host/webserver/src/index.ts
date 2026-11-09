@@ -1,4 +1,4 @@
-// @im-bot-router/host-webserver — HTTP 宿主：/hooks/{channel}/{service_id} 路由（D2）+ 管理 API（M1 CRUD）+ 静态管理页
+// @im-bot-router/host-webserver — HTTP 宿主：按服务自定义 callback_path 路由 + 管理 API（M1 CRUD）+ 静态管理页
 // 渠道处理器带整体超时保护（v0.2 D1：同步执行，防慢插件拖垮渠道超时窗口）
 // 能力协商（D6）：挂载时校验 所需 ⊆ 机器人能力，缺失即 400；机器人能力收窄时返回 warnings
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -37,6 +37,17 @@ interface Config {
 const CHANNELS: ChannelId[] = ['feishu', 'wecom', 'dingtalk', 'slack', 'telegram'];
 const ID_RE = /^[\w-]{1,64}$/;
 
+/** 规范化用户填写的回调路径：须以 / 开头，去掉尾斜杠；禁止占用 /api */
+function normalizeCallbackPath(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith('/') || trimmed.includes('://') || /\s/.test(trimmed)) return null;
+  const path = trimmed.length > 1 ? trimmed.replace(/\/+$/, '') : trimmed;
+  if (path === '/' || path === '/api' || path.startsWith('/api/')) return null;
+  if (path.length > 256) return null;
+  return path;
+}
+
 function sendJson(res: ServerResponse, status: number, payload: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
@@ -74,21 +85,24 @@ export function apply(ctx: Context, config: Config = {}) {
         };
         const respond = (p: Promise<void> | void) => Promise.resolve(p).catch((e) => sendJson(res, 500, { code: 500, msg: String(e) }));
 
-        // ---------- 渠道回调 ----------
-        const hook = url.pathname.match(/^\/hooks\/([\w-]+)\/([\w-]+)$/);
-        if (hook && method === 'POST') {
-          const handler = channels.get(hook[1]);
-          if (!handler) return sendJson(res, 404, { code: 404, msg: `未知渠道 ${hook[1]}` });
-          const parsed = body();
-          if (parsed === undefined) return sendJson(res, 400, { code: 400, msg: 'bad json' });
-          return respond(
-            (async () => {
-              const r = await withTimeout(Promise.resolve(handler(hook[2], parsed, req.headers)), 2800, {
-                status: 200, json: { code: 0, note: 'timeout-guard：处理仍在后台进行' },
-              });
-              sendJson(res, r.status, r.json);
-            })()
-          );
+        // ---------- 渠道回调：按服务自定义 callback_path 精确匹配 ----------
+        if (method === 'POST') {
+          const matched = store.getServiceByCallbackPath(url.pathname);
+          if (matched) {
+            if (!matched.enabled) return sendJson(res, 404, { code: 404, msg: '服务已停用' });
+            const handler = channels.get(matched.channel);
+            if (!handler) return sendJson(res, 404, { code: 404, msg: `未知渠道 ${matched.channel}` });
+            const parsed = body();
+            if (parsed === undefined) return sendJson(res, 400, { code: 400, msg: 'bad json' });
+            return respond(
+              (async () => {
+                const r = await withTimeout(Promise.resolve(handler(matched.id, parsed, req.headers)), 2800, {
+                  status: 200, json: { code: 0, note: 'timeout-guard：处理仍在后台进行' },
+                });
+                sendJson(res, r.status, r.json);
+              })()
+            );
+          }
         }
 
         // ---------- 管理 API ----------
@@ -180,14 +194,17 @@ export function apply(ctx: Context, config: Config = {}) {
 
             // 服务 CRUD
             if (path === '/services' && method === 'POST') {
-              const b = body() as { id?: string; channel?: string; name?: string; credentials?: Record<string, string> };
+              const b = body() as { id?: string; channel?: string; name?: string; callback_path?: string; credentials?: Record<string, string> };
               if (!b?.id || !ID_RE.test(b.id)) return sendJson(res, 400, { code: 400, msg: 'id 必填（字母数字-_，≤64）' });
               if (!b.channel || !CHANNELS.includes(b.channel as ChannelId)) return sendJson(res, 400, { code: 400, msg: `channel 须为 ${CHANNELS.join('/')}` });
               if (!b.name) return sendJson(res, 400, { code: 400, msg: 'name 必填' });
+              const callbackPath = normalizeCallbackPath(b.callback_path);
+              if (!callbackPath) return sendJson(res, 400, { code: 400, msg: 'callback_path 必填，须以 / 开头，且不可占用 /api' });
               if (store.getService(b.id)) return sendJson(res, 409, { code: 409, msg: `服务 ${b.id} 已存在` });
+              if (store.getServiceByCallbackPath(callbackPath)) return sendJson(res, 409, { code: 409, msg: `回调路径 ${callbackPath} 已被占用` });
               const cred = b.credentials ?? {};
               if (b.channel === 'feishu' && (!cred.appId || !cred.appSecret)) return sendJson(res, 400, { code: 400, msg: '飞书服务须提供 credentials.appId / appSecret' });
-              store.createService({ id: b.id, channel: b.channel as ChannelId, name: b.name, credentials: cred, enabled: true });
+              store.createService({ id: b.id, channel: b.channel as ChannelId, name: b.name, callback_path: callbackPath, credentials: cred, enabled: true });
               return sendJson(res, 201, { ok: true, service: maskService(store.getService(b.id)!) });
             }
             const svcId = path.match(/^\/services\/([\w-]+)$/);
@@ -198,13 +215,22 @@ export function apply(ctx: Context, config: Config = {}) {
                 store.deleteService(id);
                 return sendJson(res, 200, { ok: true, deleted: id });
               }
-              const b = body() as { name?: string; enabled?: boolean; credentials?: Record<string, string> };
+              const b = body() as { name?: string; enabled?: boolean; credentials?: Record<string, string>; callback_path?: string };
               const prev = store.getService(id)!;
               const mergedCred = b.credentials ? { ...prev.credentials, ...b.credentials } : undefined;
+              let callbackPath: string | undefined;
+              if (b.callback_path !== undefined) {
+                const normalized = normalizeCallbackPath(b.callback_path);
+                if (!normalized) return sendJson(res, 400, { code: 400, msg: 'callback_path 须以 / 开头，且不可占用 /api' });
+                const occupied = store.getServiceByCallbackPath(normalized);
+                if (occupied && occupied.id !== id) return sendJson(res, 409, { code: 409, msg: `回调路径 ${normalized} 已被占用` });
+                callbackPath = normalized;
+              }
               store.updateService(id, {
                 ...(b.name !== undefined ? { name: b.name } : {}),
                 ...(b.enabled !== undefined ? { enabled: b.enabled } : {}),
                 ...(mergedCred !== undefined ? { credentials: mergedCred } : {}),
+                ...(callbackPath !== undefined ? { callback_path: callbackPath } : {}),
               });
               return sendJson(res, 200, { ok: true, service: maskService(store.getService(id)!) });
             }
@@ -316,7 +342,7 @@ export function apply(ctx: Context, config: Config = {}) {
     });
 
     server.listen(port, '0.0.0.0', () => {
-      console.log(`[webserver] 监听 0.0.0.0:${port}  回调: POST /hooks/{channel}/{service_id}  管理台: http://127.0.0.1:${port}/`);
+      console.log(`[webserver] 监听 0.0.0.0:${port}  回调: 按服务自定义路径  管理台: http://127.0.0.1:${port}/`);
     });
     ctx.effect(() => () => server.close());
   });
@@ -326,8 +352,9 @@ function maskService(s: ServiceRecord) {
   const mask = (v?: string) => (v ? v.slice(0, 8) + '…' : '');
   return {
     id: s.id, channel: s.channel as string, name: s.name, enabled: s.enabled,
+    callback_path: s.callback_path,
     credentials: { appId: mask(s.credentials.appId), appSecret: mask(s.credentials.appSecret), encryptKey: s.credentials.encryptKey ? '已配置' : '' },
-    callbackUrl: `/hooks/${s.channel}/${s.id}`,
+    callbackUrl: s.callback_path,
   };
 }
 

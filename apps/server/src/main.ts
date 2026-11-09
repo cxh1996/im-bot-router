@@ -43,7 +43,7 @@ await ctx.plugin(echoPlugin);
 await ctx.plugin(helpPlugin);
 await ctx.plugin(codeReviewPlugin);
 
-console.log('[server] M0 就绪：飞书回调 → POST /hooks/feishu/svc_01 → 责任链 → 事务落盘');
+console.log('[server] M0 就绪：飞书回调 → 按服务自定义路径 POST → 责任链 → 事务落盘');
 
 process.on('SIGINT', () => {
   console.log('\n[server] 收到 SIGINT，退出（优雅 dispose 到 P1 再补）');

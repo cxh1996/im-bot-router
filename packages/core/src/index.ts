@@ -87,6 +87,8 @@ export interface ServiceRecord {
   id: string;
   channel: ChannelId;
   name: string;
+  /** 用户自定义回调路径，如 /message/event；按精确 pathname 路由，全局唯一 */
+  callback_path: string;
   credentials: Record<string, string>;
   enabled: boolean;
 }

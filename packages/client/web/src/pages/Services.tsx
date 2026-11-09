@@ -69,6 +69,7 @@ function ServicesPage() {
     id?: string;
     channel?: string;
     name: string;
+    callback_path: string;
     appId?: string;
     appSecret?: string;
     encryptKey?: string;
@@ -82,6 +83,7 @@ function ServicesPage() {
       if (editing) {
         await api('PATCH', `/services/${editing.id}`, {
           name: v.name.trim(),
+          callback_path: v.callback_path.trim(),
           ...(Object.keys(cred).length ? { credentials: cred } : {}),
         });
         message.success('服务已更新');
@@ -90,6 +92,7 @@ function ServicesPage() {
           id: v.id?.trim(),
           channel: v.channel,
           name: v.name.trim(),
+          callback_path: v.callback_path.trim(),
           credentials: cred,
         });
         message.success('回调服务已创建');
@@ -111,7 +114,7 @@ function ServicesPage() {
       <div className="page-head">
         <div>
           <h2>回调服务</h2>
-          <p className="lede">一个 IM 应用对应一个回调服务。把生成的地址交给平台管理员，凭证只在这里填写。</p>
+          <p className="lede">一个 IM 应用对应一个回调服务。回调路径自行填写（例如 /message/event），把完整地址交给平台管理员。</p>
         </div>
         <span style={{ flex: 1 }} />
         <Button type="primary" onClick={() => { setEditing(null); setOpen(true); }}>新建服务</Button>
@@ -120,7 +123,7 @@ function ServicesPage() {
       {ov.services.length === 0 ? (
         <div className="empty">
           <div className="empty-title">还没有回调服务</div>
-          <p>本机飞书回调已经在听 {location.origin}/hooks/feishu/svc_01。把 FEISHU_APP_ID 和 FEISHU_APP_SECRET 写进仓库根目录的 .env 后重启，会自动登记这个地址并挂上默认机器人。</p>
+          <p>把 FEISHU_APP_ID 和 FEISHU_APP_SECRET 写进仓库根目录的 .env 后重启，会自动登记一个示例服务（默认路径 /hooks/feishu/svc_01，可在编辑里改成你平台要求的路径）。</p>
           <Button type="primary" onClick={() => { setEditing(null); setOpen(true); }}>新建服务</Button>
         </div>
       ) : (
@@ -147,7 +150,7 @@ function ServicesPage() {
                         refresh();
                       } catch (e) { message.error((e as Error).message); }
                     }}>{s.enabled ? '停用' : '启用'}</Button>
-                    <Button size="small" onClick={() => { setEditing(s); setOpen(true); }}>凭证</Button>
+                    <Button size="small" onClick={() => { setEditing(s); setOpen(true); }}>编辑</Button>
                     <Popconfirm
                       title={`删除服务 ${s.id}？`}
                       description="其下机器人和挂载会一并删除。"
@@ -200,7 +203,9 @@ function ServicesPage() {
           layout="vertical"
           requiredMark={false}
           onFinish={(v) => void submit(v)}
-          initialValues={editing ? { name: editing.name, channel: editing.channel } : { channel: 'feishu' }}
+          initialValues={editing
+            ? { name: editing.name, channel: editing.channel, callback_path: editing.callback_path || editing.callbackUrl }
+            : { channel: 'feishu', callback_path: '/message/event' }}
         >
           {!editing && (
             <>
@@ -221,6 +226,23 @@ function ServicesPage() {
           )}
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '填写名称' }]}>
             <Input placeholder="例如：研发群助手" />
+          </Form.Item>
+          <Form.Item
+            name="callback_path"
+            label="回调路径"
+            extra="按 IM 平台要求手填，如 /message/event；全局唯一，不可占用 /api"
+            rules={[
+              { required: true, message: '填写回调路径' },
+              {
+                validator: async (_, value: string) => {
+                  const v = (value ?? '').trim();
+                  if (!v.startsWith('/')) throw new Error('须以 / 开头');
+                  if (v === '/' || v === '/api' || v.startsWith('/api/')) throw new Error('不可占用 / 或 /api');
+                },
+              },
+            ]}
+          >
+            <Input placeholder="/message/event" autoComplete="off" className="mono" />
           </Form.Item>
           <Form.Item name="appId" label="App ID" extra={editing ? '留空则不修改' : '飞书必填'}>
             <Input autoComplete="off" />

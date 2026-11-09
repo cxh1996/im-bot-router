@@ -10,13 +10,14 @@ export interface StoreService {
   // 读
   listServices(): ServiceRecord[];
   getService(id: string): ServiceRecord | undefined;
+  getServiceByCallbackPath(path: string): ServiceRecord | undefined;
   listBots(): BotRecord[];
   getBotsByService(serviceId: string): BotRecord[];
   listMounts(): MountRecord[];
   getMounts(botId: string): MountRecord[];
   // 服务 CRUD
   createService(s: ServiceRecord): void;
-  updateService(id: string, patch: { name?: string; enabled?: boolean; credentials?: Record<string, string> }): void;
+  updateService(id: string, patch: { name?: string; enabled?: boolean; credentials?: Record<string, string>; callback_path?: string }): void;
   deleteService(id: string): void;
   // 机器人 CRUD
   createBot(b: BotRecord): void;
@@ -78,6 +79,7 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS services (
       id TEXT PRIMARY KEY, channel TEXT NOT NULL, name TEXT NOT NULL,
+      callback_path TEXT NOT NULL DEFAULT '',
       credentials TEXT NOT NULL DEFAULT '{}', enabled INTEGER NOT NULL DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS bots (
@@ -101,6 +103,19 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
     CREATE INDEX IF NOT EXISTS idx_txn_received ON transactions(received_at DESC);
   `);
 
+  // 老库迁移：补 callback_path 列，空值回填为旧约定 /hooks/{channel}/{id}
+  const svcCols = (db.prepare(`PRAGMA table_info(services)`).all() as { name: string }[]).map((c) => c.name);
+  if (!svcCols.includes('callback_path')) {
+    db.exec(`ALTER TABLE services ADD COLUMN callback_path TEXT NOT NULL DEFAULT ''`);
+  }
+  for (const r of db.prepare('SELECT id, channel, callback_path FROM services').all() as { id: string; channel: string; callback_path: string }[]) {
+    if (!r.callback_path) {
+      db.prepare('UPDATE services SET callback_path = ? WHERE id = ?')
+        .run(`/hooks/${r.channel}/${r.id}`, r.id);
+    }
+  }
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_services_callback_path ON services(callback_path)`);
+
   // 首次自播种：.env 的飞书凭证 → svc_01 + bot_01 + echo 挂载（仅当 services 为空）
   const count = db.prepare('SELECT COUNT(*) AS c FROM services').get() as { c: number };
   if (count.c === 0 && opts.seedFromEnv) {
@@ -108,8 +123,8 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
     const appId = env.FEISHU_APP_ID;
     const appSecret = env.FEISHU_APP_SECRET;
     if (appId && appSecret) {
-      db.prepare('INSERT INTO services (id, channel, name, credentials) VALUES (?, ?, ?, ?)')
-        .run('svc_01', 'feishu', 'im-bot-router 测试机器人', JSON.stringify({ appId, appSecret }));
+      db.prepare('INSERT INTO services (id, channel, name, callback_path, credentials) VALUES (?, ?, ?, ?, ?)')
+        .run('svc_01', 'feishu', 'im-bot-router 测试机器人', '/hooks/feishu/svc_01', JSON.stringify({ appId, appSecret }));
       db.prepare('INSERT INTO bots (id, service_id, name, capabilities) VALUES (?, ?, ?, ?)')
         .run('bot_01', 'svc_01', '默认机器人', JSON.stringify(['im:message.read', 'im:message.reply']));
       db.prepare('INSERT INTO mounts (bot_id, plugin_id, ord) VALUES (?, ?, ?)')
@@ -121,6 +136,7 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
   const j = (s: string) => JSON.parse(s);
   const svcRow = (r: Record<string, unknown>): ServiceRecord => ({
     id: r.id as string, channel: r.channel as ChannelId, name: r.name as string,
+    callback_path: (r.callback_path as string) || `/hooks/${r.channel}/${r.id}`,
     credentials: j(r.credentials as string), enabled: !!r.enabled,
   });
   const botRow = (r: Record<string, unknown>): BotRecord => ({
@@ -151,17 +167,22 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
   const store: StoreService = {
     listServices: () => (db.prepare('SELECT * FROM services').all() as Record<string, unknown>[]).map(svcRow),
     getService: (id) => { const r = db.prepare('SELECT * FROM services WHERE id = ?').get(id); return r ? svcRow(r as Record<string, unknown>) : undefined; },
+    getServiceByCallbackPath: (path) => {
+      const r = db.prepare('SELECT * FROM services WHERE callback_path = ?').get(path);
+      return r ? svcRow(r as Record<string, unknown>) : undefined;
+    },
     listBots: () => (db.prepare('SELECT * FROM bots').all() as Record<string, unknown>[]).map(botRow),
     getBotsByService: (sid) => (db.prepare('SELECT * FROM bots WHERE service_id = ? AND enabled = 1').all(sid) as Record<string, unknown>[]).map(botRow),
     listMounts: () => (db.prepare('SELECT * FROM mounts ORDER BY bot_id, ord').all() as Record<string, unknown>[]).map(mountRow),
     getMounts: (bid) => (db.prepare('SELECT * FROM mounts WHERE bot_id = ? AND enabled = 1 ORDER BY ord').all(bid) as Record<string, unknown>[]).map(mountRow),
 
-    createService: (s) => db.prepare('INSERT INTO services (id, channel, name, credentials, enabled) VALUES (?, ?, ?, ?, ?)')
-      .run(s.id, s.channel, s.name, JSON.stringify(s.credentials), s.enabled ? 1 : 0),
+    createService: (s) => db.prepare('INSERT INTO services (id, channel, name, callback_path, credentials, enabled) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(s.id, s.channel, s.name, s.callback_path, JSON.stringify(s.credentials), s.enabled ? 1 : 0),
     updateService: (id, patch) => patchSql('services', id, {
       ...(patch.name !== undefined ? { name: patch.name } : {}),
       ...(patch.enabled !== undefined ? { enabled: patch.enabled ? 1 : 0 } : {}),
       ...(patch.credentials !== undefined ? { credentials: JSON.stringify(patch.credentials) } : {}),
+      ...(patch.callback_path !== undefined ? { callback_path: patch.callback_path } : {}),
     }),
     deleteService: (id) => {
       const botIds = (db.prepare('SELECT id FROM bots WHERE service_id = ?').all(id) as Record<string, unknown>[]).map((r) => r.id as string);
