@@ -1,4 +1,4 @@
-// im-bot-hub P0 · 飞书 Webhook 回调服务器（目标场景形态）
+// im-bot-router P0 · 飞书 Webhook 回调服务器（目标场景形态）
 // 对外契约 = 飞书事件订阅「将事件发送至开发者服务器」：
 //   POST /hooks/feishu/{serviceId}
 //   - URL 校验: {"type":"url_verification","challenge":...} → 原样返回 challenge
@@ -106,7 +106,7 @@ async function processEvent(body, serviceId, transport, receivedAt) {
       // post 富文本消息：抽取 text tag
       text = c.content.flat().filter((seg) => seg && seg.tag === 'text').map((seg) => seg.text || '').join('').replace(/@_user_\d+/g, '').trim();
     }
-    const replyText = `[im-bot-hub webhook] 会话=${unified.chat.chat_type === 'p2p' ? '私聊' : '群聊'}，端口已收到: ${text || '(非文本消息)'}`;
+    const replyText = `[im-bot-router webhook] 会话=${unified.chat.chat_type === 'p2p' ? '私聊' : '群聊'}，端口已收到: ${text || '(非文本消息)'}`;
     const resp = await client.im.v1.message.reply({
       path: { message_id: unified.message.message_id },
       data: { msg_type: 'text', content: JSON.stringify({ text: replyText }) },
@@ -184,7 +184,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[im-bot-hub webhook server] 监听 0.0.0.0:${PORT}`);
+  console.log(`[im-bot-router webhook server] 监听 0.0.0.0:${PORT}`);
   console.log(`  回调地址（给 IM 负责人配置用）: POST http://<服务器IP>:${PORT}/hooks/feishu/svc_01`);
   console.log(`  健康检查: GET /healthz   事务记录: ${path.basename(TXN_LOG)}`);
   console.log(`  加密策略: ${ENCRYPT_KEY ? 'Encrypt Key 已配置，支持解密' : '未配置（明文模式）'}`);

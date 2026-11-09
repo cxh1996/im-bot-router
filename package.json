@@ -1,5 +1,5 @@
 {
-  "name": "im-bot-hub",
+  "name": "im-bot-router",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22" },
@@ -7,7 +7,7 @@
     "dev": "tsx apps/server/src/main.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "tsx --test packages/**/test/*.test.ts",
-    "build:web": "pnpm --filter @im-bot-hub/client-web build"
+    "build:web": "pnpm --filter @im-bot-router/client-web build"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

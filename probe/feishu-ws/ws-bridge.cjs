@@ -1,4 +1,4 @@
-// im-bot-hub P0 · ws-bridge：飞书长连接 → 本地 HTTP 回调端口 的摆渡桥
+// im-bot-router P0 · ws-bridge：飞书长连接 → 本地 HTTP 回调端口 的摆渡桥
 // 用途：本地无公网 IP 时，用长连接接收真实事件，再按飞书 Webhook 契约
 //      原样 POST 给 callback-server（同一条处理管道，生产切直推零改动）
 const fs = require('node:fs');

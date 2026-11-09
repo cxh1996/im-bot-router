@@ -15,13 +15,13 @@ function loadEnvFile(url: URL): void {
 }
 loadEnvFile(new URL('../../../.env', import.meta.url));
 loadEnvFile(new URL('../../../probe/feishu-ws/.env', import.meta.url));
-import * as webserver from '@im-bot-hub/host-webserver';
-import * as storeSqlite from '@im-bot-hub/store-sqlite';
-import * as dispatcher from '@im-bot-hub/engine-dispatcher';
-import * as channelFeishu from '@im-bot-hub/channel-feishu';
-import * as echoPlugin from '@im-bot-hub/plugin-echo';
-import * as helpPlugin from '@im-bot-hub/plugin-help';
-import * as codeReviewPlugin from '@im-bot-hub/plugin-code-review';
+import * as webserver from '@im-bot-router/host-webserver';
+import * as storeSqlite from '@im-bot-router/store-sqlite';
+import * as dispatcher from '@im-bot-router/engine-dispatcher';
+import * as channelFeishu from '@im-bot-router/channel-feishu';
+import * as echoPlugin from '@im-bot-router/plugin-echo';
+import * as helpPlugin from '@im-bot-router/plugin-help';
+import * as codeReviewPlugin from '@im-bot-router/plugin-code-review';
 
 // 静态管理页优先用 React webui 构建产物（pnpm build:web），未构建时回落单文件版
 function pickStaticIndex(): string {

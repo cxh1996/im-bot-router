@@ -1,4 +1,4 @@
-// @im-bot-hub/core — cordis-free 叶子包：统一事件 / 事务 / 插件契约（docs/00 §5 §6 §7）
+// @im-bot-router/core — cordis-free 叶子包：统一事件 / 事务 / 插件契约（docs/00 §5 §6 §7）
 export type ChannelId = 'feishu' | 'wecom' | 'dingtalk' | 'slack' | 'telegram';
 
 export type ChatType = 'p2p' | 'group';

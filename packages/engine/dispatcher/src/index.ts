@@ -1,8 +1,8 @@
-// @im-bot-hub/engine-dispatcher — 业务插件注册表 + 同步责任链执行器（docs/00 v0.2 D1/D4/D7）
+// @im-bot-router/engine-dispatcher — 业务插件注册表 + 同步责任链执行器（docs/00 v0.2 D1/D4/D7）
 // 幂等：dedup_key 命中 → 记 dedup 事务即返；能力协商：所需 ⊆ 机器人能力，否则该插件 skipped
 // cordis 范式：服务引用在 inject 回调内捕获，运行期闭包只用捕获值（不可在事件回调里裸用 ctx.store）
 import type { Context } from 'cordis';
-import type { BotPluginDef, ChannelId, PluginRuntime, ReplyGateway, TxnRecord, UnifiedEvent } from '@im-bot-hub/core';
+import type { BotPluginDef, ChannelId, PluginRuntime, ReplyGateway, TxnRecord, UnifiedEvent } from '@im-bot-router/core';
 
 export interface BotPluginRegistry {
   register(def: BotPluginDef): void;

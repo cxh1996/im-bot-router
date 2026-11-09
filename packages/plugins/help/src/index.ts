@@ -1,4 +1,4 @@
-// @im-bot-hub/plugin-help — 第二个业务插件：命中「帮助/help」回复使用说明并短路，否则 next 放行
+// @im-bot-router/plugin-help — 第二个业务插件：命中「帮助/help」回复使用说明并短路，否则 next 放行
 // 用途：与 echo 组成双插件链，验证 D4 排序与短路语义
 import type { Context } from 'cordis';
 
@@ -21,7 +21,7 @@ export function apply(ctx: Context) {
         if (!/^(帮助|help|\/help)$/i.test(text)) return 'next';
         const res = await runtime.reply({
           type: 'text',
-          text: '[im-bot-hub] 可用指令：帮助（本消息）；其他任意消息转 echo 插件回显。',
+          text: '[im-bot-router] 可用指令：帮助（本消息）；其他任意消息转 echo 插件回显。',
         });
         runtime.log(`help → ${res.code} ${res.msg}`);
         return 'handled';

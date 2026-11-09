@@ -1,9 +1,9 @@
 {
-  "name": "@im-bot-hub/channel-feishu",
+  "name": "@im-bot-router/channel-feishu",
   "type": "module",
   "exports": { ".": "./src/index.ts" },
   "dependencies": {
-    "@im-bot-hub/core": "workspace:*",
+    "@im-bot-router/core": "workspace:*",
     "@larksuiteoapi/node-sdk": "^1.5.0",
     "cordis": "4.0.0-rc.12"
   }

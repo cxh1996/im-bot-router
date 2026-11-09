@@ -1,16 +1,16 @@
 {
-  "name": "@im-bot-hub/server",
+  "name": "@im-bot-router/server",
   "type": "module",
   "private": true,
   "dependencies": {
-    "@im-bot-hub/channel-feishu": "workspace:*",
-    "@im-bot-hub/core": "workspace:*",
-    "@im-bot-hub/engine-dispatcher": "workspace:*",
-    "@im-bot-hub/host-webserver": "workspace:*",
-    "@im-bot-hub/plugin-echo": "workspace:*",
-    "@im-bot-hub/plugin-help": "workspace:*",
-    "@im-bot-hub/plugin-code-review": "workspace:*",
-    "@im-bot-hub/store-sqlite": "workspace:*",
+    "@im-bot-router/channel-feishu": "workspace:*",
+    "@im-bot-router/core": "workspace:*",
+    "@im-bot-router/engine-dispatcher": "workspace:*",
+    "@im-bot-router/host-webserver": "workspace:*",
+    "@im-bot-router/plugin-echo": "workspace:*",
+    "@im-bot-router/plugin-help": "workspace:*",
+    "@im-bot-router/plugin-code-review": "workspace:*",
+    "@im-bot-router/store-sqlite": "workspace:*",
     "cordis": "4.0.0-rc.12"
   }
 }

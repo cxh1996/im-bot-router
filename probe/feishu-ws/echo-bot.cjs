@@ -1,4 +1,4 @@
-// im-bot-hub P0 探针：飞书长连接 echo 机器人
+// im-bot-router P0 探针：飞书长连接 echo 机器人
 // 用途：验证 事件订阅(长连接) -> 接收 im.message.receive_v1 -> 统一回复 全链路
 // 原始事件全文打印到 stdout，作为渠道适配归一化的真实报文样本
 const fs = require('node:fs');
@@ -50,7 +50,7 @@ async function handle(data) {
   const from = (data.sender && data.sender.sender_id && data.sender.sender_id.open_id) || '?';
   console.log(`>> 归一化要点: chat_type=${chatType} from=${from} text="${text}"`);
 
-  const replyText = `[im-bot-hub echo] 会话=${chatType === 'p2p' ? '私聊' : '群聊'}，收到: ${text || '(非文本消息)'}`;
+  const replyText = `[im-bot-router echo] 会话=${chatType === 'p2p' ? '私聊' : '群聊'}，收到: ${text || '(非文本消息)'}`;
   try {
     const resp = await client.im.v1.message.reply({
       params: { message_id: msg.message_id },
@@ -75,7 +75,7 @@ wsClient
       'im.message.receive_v1': handle,
     }),
   })
-  .then(() => console.log('[im-bot-hub probe] 长连接已启动，等待消息（私聊或群 @ 机器人）…'))
+  .then(() => console.log('[im-bot-router probe] 长连接已启动，等待消息（私聊或群 @ 机器人）…'))
   .catch((e) => {
     console.error('长连接启动失败:', e);
     process.exit(1);

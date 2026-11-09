@@ -1,10 +1,10 @@
-// @im-bot-hub/store-sqlite — 配置库+事务记录单库起步（node:sqlite，同步 API 契合 v0.2 同步执行）
+// @im-bot-router/store-sqlite — 配置库+事务记录单库起步（node:sqlite，同步 API 契合 v0.2 同步执行）
 // M1：补齐域模型 CRUD（services/bots/mounts 级联删除 + 挂载排序）
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { Context } from 'cordis';
-import type { BotRecord, ChannelId, MountRecord, ServiceRecord, TxnRecord } from '@im-bot-hub/core';
+import type { BotRecord, ChannelId, MountRecord, ServiceRecord, TxnRecord } from '@im-bot-router/core';
 
 export interface StoreService {
   // 读
@@ -109,7 +109,7 @@ export function createStore(dbPath: string, opts: { seedFromEnv?: boolean } = {}
     const appSecret = env.FEISHU_APP_SECRET;
     if (appId && appSecret) {
       db.prepare('INSERT INTO services (id, channel, name, credentials) VALUES (?, ?, ?, ?)')
-        .run('svc_01', 'feishu', 'im-bot-hub 测试机器人', JSON.stringify({ appId, appSecret }));
+        .run('svc_01', 'feishu', 'im-bot-router 测试机器人', JSON.stringify({ appId, appSecret }));
       db.prepare('INSERT INTO bots (id, service_id, name, capabilities) VALUES (?, ?, ?, ?)')
         .run('bot_01', 'svc_01', '默认机器人', JSON.stringify(['im:message.read', 'im:message.reply']));
       db.prepare('INSERT INTO mounts (bot_id, plugin_id, ord) VALUES (?, ?, ?)')

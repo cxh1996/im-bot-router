@@ -1,4 +1,4 @@
-// @im-bot-hub/plugin-echo — 最小业务插件：回显消息（契约来自 probe 实测）
+// @im-bot-router/plugin-echo — 最小业务插件：回显消息（契约来自 probe 实测）
 // Context 服务声明统一放在提供方包（engine-dispatcher / channel-feishu / host-webserver / store-sqlite），消费方只 import 类型
 import type { Context } from 'cordis';
 
@@ -25,7 +25,7 @@ export function apply(ctx: Context) {
             .trim();
         }
         const label = event.chat.chat_type === 'p2p' ? '私聊' : '群聊';
-        const res = await runtime.reply({ type: 'text', text: `[im-bot-hub M0] ${label}已收到: ${text || '(非文本消息)'}` });
+        const res = await runtime.reply({ type: 'text', text: `[im-bot-router M0] ${label}已收到: ${text || '(非文本消息)'}` });
         runtime.log(`echo → ${res.code} ${res.msg}`);
         return 'handled';
       },

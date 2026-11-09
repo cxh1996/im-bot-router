@@ -1,4 +1,4 @@
-// @im-bot-hub/host-webserver — HTTP 宿主：/hooks/{channel}/{service_id} 路由（D2）+ 管理 API（M1 CRUD）+ 静态管理页
+// @im-bot-router/host-webserver — HTTP 宿主：/hooks/{channel}/{service_id} 路由（D2）+ 管理 API（M1 CRUD）+ 静态管理页
 // 渠道处理器带整体超时保护（v0.2 D1：同步执行，防慢插件拖垮渠道超时窗口）
 // 能力协商（D6）：挂载时校验 所需 ⊆ 机器人能力，缺失即 400；机器人能力收窄时返回 warnings
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -6,7 +6,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Context } from 'cordis';
-import { CAPABILITY_CATALOG, type ChannelId, type ServiceRecord, type TxnRecord } from '@im-bot-hub/core';
+import { CAPABILITY_CATALOG, type ChannelId, type ServiceRecord, type TxnRecord } from '@im-bot-router/core';
 
 export interface ChannelHandlerResult {
   status: number;

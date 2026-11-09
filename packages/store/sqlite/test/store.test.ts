@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createStore } from '../src/index.ts';
-import type { TxnRecord } from '@im-bot-hub/core';
+import type { TxnRecord } from '@im-bot-router/core';
 
 function mkStore() {
   return createStore(':memory:', {});

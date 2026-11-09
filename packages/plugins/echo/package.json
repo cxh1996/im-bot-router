@@ -1,9 +1,9 @@
 {
-  "name": "@im-bot-hub/plugin-echo",
+  "name": "@im-bot-router/plugin-echo",
   "type": "module",
   "exports": { ".": "./src/index.ts" },
   "dependencies": {
-    "@im-bot-hub/core": "workspace:*",
+    "@im-bot-router/core": "workspace:*",
     "cordis": "4.0.0-rc.12"
   }
 }

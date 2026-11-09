@@ -1,5 +1,5 @@
 {
-  "name": "@im-bot-hub/client-web",
+  "name": "@im-bot-router/client-web",
   "type": "module",
   "private": true,
   "scripts": {

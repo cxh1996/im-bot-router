@@ -26,7 +26,7 @@ function App() {
     <div className="layout">
       <nav className="nav">
         <div className="brand">
-          <b>im-bot-hub</b>
+          <b>im-bot-router</b>
           <span>回调管理台</span>
         </div>
         {panels.map((p) => (

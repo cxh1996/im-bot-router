@@ -1,9 +1,9 @@
 ---
 name: bot-plugin-dev
-description: 为 im-bot-hub 编写业务插件的完整操作手册：接口契约、挂载配置、能力协商、调试路径
+description: 为 im-bot-router 编写业务插件的完整操作手册：接口契约、挂载配置、能力协商、调试路径
 ---
 
-# 编写 im-bot-hub 业务插件
+# 编写 im-bot-router 业务插件
 
 ## 何时用
 
@@ -11,12 +11,12 @@ description: 为 im-bot-hub 编写业务插件的完整操作手册：接口契�
 
 ## 契约（以 plugins/code-review 为最全范例）
 
-1. 建包 `packages/plugins/<name>/`：package.json（deps: `@im-bot-hub/core` + `cordis`）+ `src/index.ts`
+1. 建包 `packages/plugins/<name>/`：package.json（deps: `@im-bot-router/core` + `cordis`）+ `src/index.ts`
 2. 插件形态（函数式）：
 
 ```ts
 import type { Context } from 'cordis';
-import type { UnifiedEvent } from '@im-bot-hub/core';
+import type { UnifiedEvent } from '@im-bot-router/core';
 
 export const name = 'plugin-<id>';
 
@@ -43,7 +43,7 @@ export function apply(ctx: Context) {
 
 ## 挂载与调试
 
-1. `apps/server/src/main.ts` 加 `import * as x from '@im-bot-hub/plugin-<name>'` + `await ctx.plugin(x)`；apps/server/package.json 加 workspace 依赖
+1. `apps/server/src/main.ts` 加 `import * as x from '@im-bot-router/plugin-<name>'` + `await ctx.plugin(x)`；apps/server/package.json 加 workspace 依赖
 2. `pnpm typecheck && pnpm test`，重启 `pnpm dev`
 3. 管理台（127.0.0.1:9800，直接打开）→ 机器人 → 挂载插件 → 配置 → 拖拽排序
 4. 实测：lark-cli 以用户身份发带 @ 的群消息（模板见项目 memory/回放脚本），看管理台事务 steps 与群里回帖

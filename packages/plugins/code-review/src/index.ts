@@ -1,4 +1,4 @@
-// @im-bot-hub/plugin-code-review — 第一个业务插件：群内 @机器人 触发 Claude Code Workflow 做代码审查
+// @im-bot-router/plugin-code-review — 第一个业务插件：群内 @机器人 触发 Claude Code Workflow 做代码审查
 //
 // 设计假设（需求方明确）：review 逻辑由目标环境里已有的 Claude Code + 定制 Workflow 实现，
 // 本插件只做「触发器」：语义识别 → headless 拉起 claude 执行 workflow → 产出回帖到群。
@@ -18,7 +18,7 @@
 // 空输入回用法说明。产出解析：stdout 为 JSON 且含 result 字段（claude -p --output-format json）则取之，否则原文。
 import { spawn } from 'node:child_process';
 import type { Context } from 'cordis';
-import type { UnifiedEvent } from '@im-bot-hub/core';
+import type { UnifiedEvent } from '@im-bot-router/core';
 
 interface ReviewConfig {
   chatId?: string;

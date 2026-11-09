@@ -1,9 +1,9 @@
-// @im-bot-hub/channel-feishu — P0 渠道适配（契约 100% 来自 probe 实测，docs/samples 有真实报文）
+// @im-bot-router/channel-feishu — P0 渠道适配（契约 100% 来自 probe 实测，docs/samples 有真实报文）
 // 进向：challenge / 可选 AES 解密 / 事件 v2 归一化；出向：统一回复 → im.v1.message.reply（注册进 replyGateways）
 import { createHash, createDecipheriv } from 'node:crypto';
 import lark from '@larksuiteoapi/node-sdk';
 import type { Context } from 'cordis';
-import type { ChannelId, ReplyGateway, UnifiedEvent } from '@im-bot-hub/core';
+import type { ChannelId, ReplyGateway, UnifiedEvent } from '@im-bot-router/core';
 
 /** 飞书事件订阅加密策略（官方算法；仅在服务凭证配了 encryptKey 时启用） */
 export function feishuDecrypt(encryptStr: string, encryptKey: string): string {

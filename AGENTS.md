@@ -1,4 +1,4 @@
-# AGENTS.md — im-bot-hub
+# AGENTS.md — im-bot-router
 
 单一事实源（CLAUDE.md 等 agent 入口一律指向本文件）。知识分层：需求=docs/00，技术方案=docs/01，决策理由=.agents/notes/，实测样本=docs/samples/，包契约=各包 README（未写前看 src）。
 

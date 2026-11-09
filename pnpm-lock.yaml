@@ -23,28 +23,28 @@ importers:
 
   apps/server:
     dependencies:
-      '@im-bot-hub/channel-feishu':
+      '@im-bot-router/channel-feishu':
         specifier: workspace:*
         version: link:../../packages/channels/feishu
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@im-bot-hub/engine-dispatcher':
+      '@im-bot-router/engine-dispatcher':
         specifier: workspace:*
         version: link:../../packages/engine/dispatcher
-      '@im-bot-hub/host-webserver':
+      '@im-bot-router/host-webserver':
         specifier: workspace:*
         version: link:../../packages/host/webserver
-      '@im-bot-hub/plugin-code-review':
+      '@im-bot-router/plugin-code-review':
         specifier: workspace:*
         version: link:../../packages/plugins/code-review
-      '@im-bot-hub/plugin-echo':
+      '@im-bot-router/plugin-echo':
         specifier: workspace:*
         version: link:../../packages/plugins/echo
-      '@im-bot-hub/plugin-help':
+      '@im-bot-router/plugin-help':
         specifier: workspace:*
         version: link:../../packages/plugins/help
-      '@im-bot-hub/store-sqlite':
+      '@im-bot-router/store-sqlite':
         specifier: workspace:*
         version: link:../../packages/store/sqlite
       cordis:
@@ -53,7 +53,7 @@ importers:
 
   packages/channels/feishu:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       '@larksuiteoapi/node-sdk':
@@ -97,7 +97,7 @@ importers:
 
   packages/engine/dispatcher:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       cordis:
@@ -106,7 +106,7 @@ importers:
 
   packages/host/webserver:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       cordis:
@@ -115,7 +115,7 @@ importers:
 
   packages/plugins/code-review:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       cordis:
@@ -124,7 +124,7 @@ importers:
 
   packages/plugins/echo:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       cordis:
@@ -133,7 +133,7 @@ importers:
 
   packages/plugins/help:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       cordis:
@@ -142,7 +142,7 @@ importers:
 
   packages/store/sqlite:
     dependencies:
-      '@im-bot-hub/core':
+      '@im-bot-router/core':
         specifier: workspace:*
         version: link:../../core
       cordis:
