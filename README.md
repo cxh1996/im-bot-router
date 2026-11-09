@@ -24,7 +24,7 @@ IM 平台 ──POST {用户自定义 callback_path}──> 渠道适配器（�
 | `packages/engine/dispatcher` | 业务插件注册表 + 同步责任链 + 幂等 + 能力协商 |
 | `packages/channels/feishu` | challenge/AES/事件归一化/回复翻译 |
 | `packages/host/webserver` | hooks 路由 + 管理 API（单管理员鉴权）+ 静态托管 |
-| `packages/plugins/*` | 业务插件：echo、help、code-review（触发 Claude Code Workflow，支持模型降级链） |
+| `packages/plugins/*` | 业务插件：echo、help（官方示例） |
 | `packages/client/web` | 管理台（左侧导航：回调服务 / 机器人 / 插件 / 事务） |
 | `apps/server` | 薄宿主，插件装配 |
 

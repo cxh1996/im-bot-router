@@ -23,5 +23,4 @@ Agent Notes 就是 agent 写的 RFC/ADR：记录**为什么这么定**。知识�
 | 2026-11-07 | [architecture/d1-sync-execution](implemented/architecture/2026-11-07-d1-sync-execution.md) | implemented |
 | 2026-11-07 | [bug-fix/feishu-granular-permissions](implemented/bug-fix/2026-11-07-feishu-granular-permissions.md) | implemented |
 | 2026-11-07 | [bug-fix/ws-silent-failure](implemented/bug-fix/2026-11-07-ws-silent-failure.md) | implemented |
-| 2026-11-08 | [feature/stdin-prompt-spawn](implemented/feature/2026-11-08-stdin-prompt-spawn.md) | implemented |
 | 2026-11-08 | [architecture/cordis-scoped-services](implemented/architecture/2026-11-08-cordis-scoped-services.md) | implemented |

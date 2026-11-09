@@ -2,6 +2,15 @@
 
 单一事实源（CLAUDE.md 等 agent 入口一律指向本文件）。知识分层：需求=docs/00，技术方案=docs/01，决策理由=.agents/notes/，实测样本=docs/samples/，包契约=各包 README（未写前看 src）。
 
+## 本地二开覆盖（必读）
+
+加载本文件时，**必须同时加载**同目录 `AGENTS.local.md`（若存在）：
+
+1. 先读本文件，再读 `AGENTS.local.md`。
+2. 两者冲突时，**以 `AGENTS.local.md` 为准**（命令、原则、规约、路径、端口、渠道约定等均可被覆盖）。
+3. `AGENTS.local.md` 供二开/私有环境覆盖，**不入库**（`*.local` / `*.local.*` 已 gitignore）；可参考 `AGENTS.local.md.example` 自行创建。
+4. `AGENTS.local.md` 不存在时，仅按本文件执行，不得报错或跳过后续任务。
+
 ## 命令
 
 - `pnpm install` — 安装（首次）

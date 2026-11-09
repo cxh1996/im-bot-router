@@ -35,9 +35,6 @@ importers:
       '@im-bot-router/host-webserver':
         specifier: workspace:*
         version: link:../../packages/host/webserver
-      '@im-bot-router/plugin-code-review':
-        specifier: workspace:*
-        version: link:../../packages/plugins/code-review
       '@im-bot-router/plugin-echo':
         specifier: workspace:*
         version: link:../../packages/plugins/echo
@@ -105,15 +102,6 @@ importers:
         version: 4.0.0-rc.12
 
   packages/host/webserver:
-    dependencies:
-      '@im-bot-router/core':
-        specifier: workspace:*
-        version: link:../../core
-      cordis:
-        specifier: 4.0.0-rc.12
-        version: 4.0.0-rc.12
-
-  packages/plugins/code-review:
     dependencies:
       '@im-bot-router/core':
         specifier: workspace:*

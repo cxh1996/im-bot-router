@@ -9,7 +9,6 @@
     "@im-bot-router/host-webserver": "workspace:*",
     "@im-bot-router/plugin-echo": "workspace:*",
     "@im-bot-router/plugin-help": "workspace:*",
-    "@im-bot-router/plugin-code-review": "workspace:*",
     "@im-bot-router/store-sqlite": "workspace:*",
     "cordis": "4.0.0-rc.12"
   }

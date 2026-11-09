@@ -5,6 +5,9 @@ dist/
 *.db-wal
 *.db-shm
 .env
+*.local
+*.local.*
+!AGENTS.local.md.example
 data/
 research/
 .tmp-*

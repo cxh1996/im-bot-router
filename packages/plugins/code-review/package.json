@@ -1,9 +1,0 @@
-{
-  "name": "@im-bot-router/plugin-code-review",
-  "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": {
-    "@im-bot-router/core": "workspace:*",
-    "cordis": "4.0.0-rc.12"
-  }
-}

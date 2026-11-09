@@ -21,7 +21,6 @@ import * as dispatcher from '@im-bot-router/engine-dispatcher';
 import * as channelFeishu from '@im-bot-router/channel-feishu';
 import * as echoPlugin from '@im-bot-router/plugin-echo';
 import * as helpPlugin from '@im-bot-router/plugin-help';
-import * as codeReviewPlugin from '@im-bot-router/plugin-code-review';
 
 // 静态管理页优先用 React webui 构建产物（pnpm build:web），未构建时回落单文件版
 function pickStaticIndex(): string {
@@ -41,7 +40,6 @@ await ctx.plugin(dispatcher);
 await ctx.plugin(channelFeishu);
 await ctx.plugin(echoPlugin);
 await ctx.plugin(helpPlugin);
-await ctx.plugin(codeReviewPlugin);
 
 console.log('[server] M0 就绪：飞书回调 → 按服务自定义路径 POST → 责任链 → 事务落盘');
 

@@ -13,4 +13,4 @@ v0.1 原设计"秒回 ACK + 事务队列 + Worker 异步"，为满足 IM 平台�
 v0.2 采纳同步执行；webserver 对渠道处理器加 2.8s timeout-guard（超时先回 200，处理后台继续完成并落事务）。证据：docs/samples/ 中 success 事务 finished-received ≈ 750ms。
 
 ## Impact
-插件契约须"快速返回"（长任务应由插件自己异步化或走外部 workflow，如 code-review 拉起 Claude Code 后台跑、完成再回帖——实测该模式可行）。
+插件契约须"快速返回"（长任务应由插件自己异步化或走外部 workflow，完成后再回帖）。
